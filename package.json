@@ -1,0 +1,46 @@
+{
+  "bin": {
+    "mori-lint": "dist/cli.js"
+  },
+  "description": "AIエージェントの報告文を検査するリンター。絶対表現、必須欄の欠落、証跡のない完了宣言などを決定的ルールで検出する。",
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "esbuild": "^0.28.2",
+    "typescript": "^5.6.0"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "README.en.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "lint",
+    "ai-agent",
+    "llm",
+    "report",
+    "markdown"
+  ],
+  "license": "MIT",
+  "main": "dist/index.js",
+  "name": "mori-lint",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "prepublishOnly": "npm run build && npm test",
+    "build:playground": "esbuild src/browser.ts --bundle --format=iife --global-name=MoriLint --outfile=playground/mori-lint.browser.js",
+    "lint-self": "npm run build && node dist/cli.js examples/clean-report.md --preset generic",
+    "test": "npm run build && node test/run-fixtures.mjs"
+  },
+  "type": "commonjs",
+  "types": "dist/index.d.ts",
+  "version": "0.1.0",
+  "author": "Masaki Ogawa",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Masaki-Ogawa/mori-lint.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Masaki-Ogawa/mori-lint/issues"
+  },
+  "homepage": "https://github.com/Masaki-Ogawa/mori-lint#readme"
+}

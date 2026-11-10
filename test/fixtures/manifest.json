@@ -1,0 +1,390 @@
+{
+  "version": 1,
+  "note": "expectは対象ルールについての期待値だけを書く。他のルールの検出はこのフィクスチャでは判定しない。",
+  "cases": [
+    {
+      "file": "MORI001-absolute-claim/fail-01.md",
+      "preset": "generic",
+      "targetRule": "MORI001",
+      "expect": {
+        "MORI001": "present"
+      }
+    },
+    {
+      "file": "MORI001-absolute-claim/fail-02.md",
+      "preset": "generic",
+      "targetRule": "MORI001",
+      "expect": {
+        "MORI001": "present"
+      }
+    },
+    {
+      "file": "MORI001-absolute-claim/fail-03.md",
+      "preset": "generic",
+      "targetRule": "MORI001",
+      "expect": {
+        "MORI001": "present"
+      }
+    },
+    {
+      "file": "MORI001-absolute-claim/pass-01.md",
+      "preset": "generic",
+      "targetRule": "MORI001",
+      "expect": {
+        "MORI001": "absent"
+      }
+    },
+    {
+      "file": "MORI001-absolute-claim/pass-02.md",
+      "preset": "generic",
+      "targetRule": "MORI001",
+      "expect": {
+        "MORI001": "absent"
+      }
+    },
+    {
+      "file": "MORI001-absolute-claim/pass-03.md",
+      "preset": "generic",
+      "targetRule": "MORI001",
+      "expect": {
+        "MORI001": "absent"
+      }
+    },
+    {
+      "file": "MORI001-absolute-claim/fail-04.md",
+      "preset": "generic",
+      "targetRule": "MORI001",
+      "expect": {
+        "MORI001": "present"
+      }
+    },
+    {
+      "file": "MORI001-absolute-claim/fail-05.md",
+      "preset": "generic",
+      "targetRule": "MORI001",
+      "expect": {
+        "MORI001": "present"
+      }
+    },
+    {
+      "file": "MORI001-absolute-claim/fail-06.md",
+      "preset": "generic",
+      "targetRule": "MORI001",
+      "expect": {
+        "MORI001": "present"
+      }
+    },
+    {
+      "file": "MORI001-absolute-claim/pass-04.md",
+      "preset": "generic",
+      "targetRule": "MORI001",
+      "expect": {
+        "MORI001": "absent"
+      }
+    },
+    {
+      "file": "MORI001-absolute-claim/pass-05.md",
+      "preset": "generic",
+      "targetRule": "MORI001",
+      "expect": {
+        "MORI001": "absent"
+      }
+    },
+    {
+      "file": "MORI001-absolute-claim/pass-06.md",
+      "preset": "generic",
+      "targetRule": "MORI001",
+      "expect": {
+        "MORI001": "absent"
+      }
+    },
+    {
+      "file": "MORI002-missing-required-section/fail-01.md",
+      "preset": "ops",
+      "targetRule": "MORI002",
+      "expect": {
+        "MORI002": "present"
+      }
+    },
+    {
+      "file": "MORI002-missing-required-section/fail-02.md",
+      "preset": "ops",
+      "targetRule": "MORI002",
+      "expect": {
+        "MORI002": "present"
+      }
+    },
+    {
+      "file": "MORI002-missing-required-section/fail-03.md",
+      "preset": "ops",
+      "targetRule": "MORI002",
+      "expect": {
+        "MORI002": "present"
+      }
+    },
+    {
+      "file": "MORI002-missing-required-section/pass-01.md",
+      "preset": "ops",
+      "targetRule": "MORI002",
+      "expect": {
+        "MORI002": "absent"
+      }
+    },
+    {
+      "file": "MORI002-missing-required-section/pass-02.md",
+      "preset": "ops",
+      "targetRule": "MORI002",
+      "expect": {
+        "MORI002": "absent"
+      }
+    },
+    {
+      "file": "MORI002-missing-required-section/pass-03.md",
+      "preset": "ops",
+      "targetRule": "MORI002",
+      "expect": {
+        "MORI002": "absent"
+      }
+    },
+    {
+      "file": "MORI003-empty-none/fail-01.md",
+      "preset": "generic",
+      "targetRule": "MORI003",
+      "expect": {
+        "MORI003": "present"
+      }
+    },
+    {
+      "file": "MORI003-empty-none/fail-02.md",
+      "preset": "generic",
+      "targetRule": "MORI003",
+      "expect": {
+        "MORI003": "present"
+      }
+    },
+    {
+      "file": "MORI003-empty-none/fail-03.md",
+      "preset": "generic",
+      "targetRule": "MORI003",
+      "expect": {
+        "MORI003": "present"
+      }
+    },
+    {
+      "file": "MORI003-empty-none/pass-01.md",
+      "preset": "generic",
+      "targetRule": "MORI003",
+      "expect": {
+        "MORI003": "absent"
+      }
+    },
+    {
+      "file": "MORI003-empty-none/pass-02.md",
+      "preset": "generic",
+      "targetRule": "MORI003",
+      "expect": {
+        "MORI003": "absent"
+      }
+    },
+    {
+      "file": "MORI003-empty-none/pass-03.md",
+      "preset": "generic",
+      "targetRule": "MORI003",
+      "expect": {
+        "MORI003": "absent"
+      }
+    },
+    {
+      "file": "MORI004-completion-without-evidence/fail-01.md",
+      "preset": "generic",
+      "targetRule": "MORI004",
+      "expect": {
+        "MORI004": "present"
+      }
+    },
+    {
+      "file": "MORI004-completion-without-evidence/fail-02.md",
+      "preset": "generic",
+      "targetRule": "MORI004",
+      "expect": {
+        "MORI004": "present"
+      }
+    },
+    {
+      "file": "MORI004-completion-without-evidence/fail-03.md",
+      "preset": "generic",
+      "targetRule": "MORI004",
+      "expect": {
+        "MORI004": "present"
+      }
+    },
+    {
+      "file": "MORI004-completion-without-evidence/pass-01.md",
+      "preset": "generic",
+      "targetRule": "MORI004",
+      "expect": {
+        "MORI004": "absent"
+      }
+    },
+    {
+      "file": "MORI004-completion-without-evidence/pass-02.md",
+      "preset": "generic",
+      "targetRule": "MORI004",
+      "expect": {
+        "MORI004": "absent"
+      }
+    },
+    {
+      "file": "MORI004-completion-without-evidence/pass-03.md",
+      "preset": "generic",
+      "targetRule": "MORI004",
+      "expect": {
+        "MORI004": "absent"
+      }
+    },
+    {
+      "file": "MORI005-all-without-denominator/fail-01.md",
+      "preset": "generic",
+      "targetRule": "MORI005",
+      "expect": {
+        "MORI005": "present"
+      }
+    },
+    {
+      "file": "MORI005-all-without-denominator/fail-02.md",
+      "preset": "generic",
+      "targetRule": "MORI005",
+      "expect": {
+        "MORI005": "present"
+      }
+    },
+    {
+      "file": "MORI005-all-without-denominator/fail-03.md",
+      "preset": "generic",
+      "targetRule": "MORI005",
+      "expect": {
+        "MORI005": "present"
+      }
+    },
+    {
+      "file": "MORI005-all-without-denominator/pass-01.md",
+      "preset": "generic",
+      "targetRule": "MORI005",
+      "expect": {
+        "MORI005": "absent"
+      }
+    },
+    {
+      "file": "MORI005-all-without-denominator/pass-02.md",
+      "preset": "generic",
+      "targetRule": "MORI005",
+      "expect": {
+        "MORI005": "absent"
+      }
+    },
+    {
+      "file": "MORI005-all-without-denominator/pass-03.md",
+      "preset": "generic",
+      "targetRule": "MORI005",
+      "expect": {
+        "MORI005": "absent"
+      }
+    },
+    {
+      "file": "MORI006-number-without-basis/fail-01.md",
+      "preset": "research",
+      "targetRule": "MORI006",
+      "expect": {
+        "MORI006": "present"
+      }
+    },
+    {
+      "file": "MORI006-number-without-basis/fail-02.md",
+      "preset": "research",
+      "targetRule": "MORI006",
+      "expect": {
+        "MORI006": "present"
+      }
+    },
+    {
+      "file": "MORI006-number-without-basis/fail-03.md",
+      "preset": "research",
+      "targetRule": "MORI006",
+      "expect": {
+        "MORI006": "present"
+      }
+    },
+    {
+      "file": "MORI006-number-without-basis/pass-01.md",
+      "preset": "research",
+      "targetRule": "MORI006",
+      "expect": {
+        "MORI006": "absent"
+      }
+    },
+    {
+      "file": "MORI006-number-without-basis/pass-02.md",
+      "preset": "research",
+      "targetRule": "MORI006",
+      "expect": {
+        "MORI006": "absent"
+      }
+    },
+    {
+      "file": "MORI006-number-without-basis/pass-03.md",
+      "preset": "research",
+      "targetRule": "MORI006",
+      "expect": {
+        "MORI006": "absent"
+      }
+    },
+    {
+      "file": "MORI007-risk-without-amount/fail-01.md",
+      "preset": "ops",
+      "targetRule": "MORI007",
+      "expect": {
+        "MORI007": "present"
+      }
+    },
+    {
+      "file": "MORI007-risk-without-amount/fail-02.md",
+      "preset": "ops",
+      "targetRule": "MORI007",
+      "expect": {
+        "MORI007": "present"
+      }
+    },
+    {
+      "file": "MORI007-risk-without-amount/fail-03.md",
+      "preset": "ops",
+      "targetRule": "MORI007",
+      "expect": {
+        "MORI007": "present"
+      }
+    },
+    {
+      "file": "MORI007-risk-without-amount/pass-01.md",
+      "preset": "ops",
+      "targetRule": "MORI007",
+      "expect": {
+        "MORI007": "absent"
+      }
+    },
+    {
+      "file": "MORI007-risk-without-amount/pass-02.md",
+      "preset": "ops",
+      "targetRule": "MORI007",
+      "expect": {
+        "MORI007": "absent"
+      }
+    },
+    {
+      "file": "MORI007-risk-without-amount/pass-03.md",
+      "preset": "ops",
+      "targetRule": "MORI007",
+      "expect": {
+        "MORI007": "absent"
+      }
+    }
+  ]
+}
