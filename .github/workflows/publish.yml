@@ -36,3 +36,39 @@ jobs:
       - name: Publish to npm (OIDC trusted publishing, no token)
         if: steps.gate.outputs.skip != 'true'
         run: npm publish --provenance --access public
+
+  publish-gpr:
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: https://npm.pkg.github.com
+          scope: "@masaki-ogawa"
+      - name: Rename to scoped name (GitHub Packages requires a scope)
+        run: npm pkg set name=@masaki-ogawa/mori-lint
+      - run: npm install
+      - run: npm test
+      - name: Check whether this version is already on GitHub Packages
+        id: gate
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          LOCAL=$(node -p "require('./package.json').version")
+          PUBLISHED=$(npm view @masaki-ogawa/mori-lint version 2>/dev/null || echo "none")
+          echo "local=$LOCAL published=$PUBLISHED"
+          if [ "$LOCAL" = "$PUBLISHED" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Publish to GitHub Packages
+        if: steps.gate.outputs.skip != 'true'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm publish
