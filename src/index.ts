@@ -1,4 +1,4 @@
-import { Finding, LintOptions, MoriConfig, RULE_INFO } from "./types";
+import { Finding, Lang, LintOptions, MoriConfig, RULE_INFO } from "./types";
 import { parseMarkdown } from "./parse";
 import {
   ABSOLUTE_TERMS_EN,
@@ -31,10 +31,18 @@ const RULE_CHECKS: Record<string, RuleCheck> = {
  * Lint a report (Markdown) and return the findings.
  * This does not judge factual correctness; it only checks whether the grounds are written in the text.
  */
+export function detectLang(text: string): Lang {
+  const jaChars = (text.match(/[\u3040-\u30ff\u4e00-\u9fff]/g) ?? []).length;
+  const enChars = (text.match(/[A-Za-z]/g) ?? []).length;
+  return enChars > 0 && enChars >= jaChars * 2 ? "en" : "ja";
+}
+
 export function lint(text: string, options: LintOptions = {}): Finding[] {
   const config: MoriConfig = options.config ?? {};
   const presetName = options.preset ?? config.preset ?? "generic";
   const preset = resolvePreset(presetName, config);
+  const requested = options.lang ?? config.lang ?? "auto";
+  const lang: Lang = requested === "auto" ? detectLang(text) : requested;
   const doc = parseMarkdown(text);
 
   const ctx = {
@@ -44,6 +52,7 @@ export function lint(text: string, options: LintOptions = {}): Finding[] {
       ...(config.dictionary?.absoluteTerms ?? []),
     ],
     absoluteTermsEn: [...ABSOLUTE_TERMS_EN],
+    lang,
   };
 
   let findings: Finding[] = [];
@@ -57,7 +66,9 @@ export function lint(text: string, options: LintOptions = {}): Finding[] {
         severity: "warn",
         line: sup.line,
         message:
-          "抑制指定（mori-lint-disable）に理由（reason:）が書かれていません。理由を書くか、本文を直してください。",
+          lang === "en"
+            ? "A suppression (mori-lint-disable) has no reason (reason:). Write the reason, or fix the text instead."
+            : "抑制指定（mori-lint-disable）に理由（reason:）が書かれていません。理由を書くか、本文を直してください。",
       });
     }
   }

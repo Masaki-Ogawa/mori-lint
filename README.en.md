@@ -17,6 +17,8 @@ npx mori-lint --explain MORI004
 
 Four presets are available: generic (default), coding, research, and ops. Required sections and rule severities change per preset.
 
+Reports in English and Japanese are both supported. The document language is detected automatically and findings are reported in that language (override with `--lang ja|en|auto`).
+
 ## Rules
 
 | ID | What it flags |

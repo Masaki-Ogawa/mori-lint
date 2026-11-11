@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 import * as fs from "fs";
 import * as path from "path";
-import { lint } from "./index";
-import { Finding, MoriConfig, RULE_INFO } from "./types";
+import { detectLang, lint } from "./index";
+import { Finding, Lang, MoriConfig, RULE_INFO, RULE_INFO_EN } from "./types";
 
 interface CliArgs {
   files: string[];
@@ -14,6 +14,7 @@ interface CliArgs {
   explain?: string;
   help: boolean;
   version: boolean;
+  lang?: Lang | "auto";
 }
 
 function parseArgs(argv: string[]): CliArgs {
@@ -35,6 +36,10 @@ function parseArgs(argv: string[]): CliArgs {
     } else if (a === "--stdin") args.stdin = true;
     else if (a === "--strict") args.strict = true;
     else if (a === "--explain") args.explain = argv[++i];
+    else if (a === "--lang") {
+      const v = argv[++i];
+      if (v === "ja" || v === "en" || v === "auto") args.lang = v;
+    }
     else if (a === "--help" || a === "-h") args.help = true;
     else if (a === "--version" || a === "-v") args.version = true;
     else if (a.startsWith("--")) {
@@ -55,6 +60,7 @@ const HELP = `mori-lint ― AIエージェントの報告文を検査するリ�
   --preset <name>   generic（初期値） | coding | research | ops
   --config <path>   設定ファイル（.morilintrc.json形式）
   --format <形式>   text（初期値） | json
+  --lang <lang>     ja | en | auto（初期値: auto、文書の言語で判定）
   --stdin           標準入力から読む
   --strict          warnでも終了コード1にする
   --explain <ID>    ルールの根拠と直し方を表示する
@@ -107,14 +113,15 @@ async function main(): Promise<number> {
     return 0;
   }
   if (args.explain) {
-    const info = RULE_INFO[args.explain.toUpperCase()];
+    const en = args.lang === "en";
+    const info = (en ? RULE_INFO_EN : RULE_INFO)[args.explain.toUpperCase()];
     if (!info) {
-      console.error(`ルールが見つかりません: ${args.explain}`);
+      console.error(en ? `Rule not found: ${args.explain}` : `ルールが見つかりません: ${args.explain}`);
       return 2;
     }
     console.log(`${info.id} ${info.name} ― ${info.title}\n`);
-    console.log(`内容: ${info.description}`);
-    console.log(`直し方: ${info.fix}`);
+    console.log(en ? `About: ${info.description}` : `内容: ${info.description}`);
+    console.log(en ? `Fix: ${info.fix}` : `直し方: ${info.fix}`);
     return 0;
   }
 
@@ -144,12 +151,18 @@ async function main(): Promise<number> {
     return 2;
   }
 
-  const results: { file: string; findings: Finding[] }[] = [];
+  const results: { file: string; findings: Finding[]; lang: Lang }[] = [];
   let errors = 0;
   let warnings = 0;
   for (const t of targets) {
-    const findings = lint(t.text, { preset: args.preset, config });
-    results.push({ file: t.name, findings });
+    const findings = lint(t.text, { preset: args.preset, config, lang: args.lang });
+    const lang: Lang =
+      args.lang && args.lang !== "auto"
+        ? args.lang
+        : config.lang && config.lang !== "auto"
+          ? config.lang
+          : detectLang(t.text);
+    results.push({ file: t.name, findings, lang });
     for (const f of findings) {
       if (f.severity === "error") errors++;
       else warnings++;
@@ -166,19 +179,25 @@ async function main(): Promise<number> {
     );
   } else {
     for (const r of results) {
+      const en = r.lang === "en";
       console.log(`== ${r.file}`);
       if (r.findings.length === 0) {
-        console.log("  検出なし");
+        console.log(en ? "  no findings" : "  検出なし");
       }
       for (const f of r.findings) {
         console.log(
-          `  ${f.line}行目 [${f.severity}] ${f.ruleId} ${f.ruleName}: ${f.message}`
+          en
+            ? `  line ${f.line} [${f.severity}] ${f.ruleId} ${f.ruleName}: ${f.message}`
+            : `  ${f.line}行目 [${f.severity}] ${f.ruleId} ${f.ruleName}: ${f.message}`
         );
         if (f.excerpt) console.log(`    > ${f.excerpt}`);
       }
     }
+    const enUi = results.length > 0 && results[0].lang === "en";
     console.log(
-      `\n合計: error ${errors}件 / warn ${warnings}件（対象 ${results.length}ファイル）`
+      enUi
+        ? `\nTotal: ${errors} error(s) / ${warnings} warning(s) across ${results.length} file(s)`
+        : `\n合計: error ${errors}件 / warn ${warnings}件（対象 ${results.length}ファイル）`
     );
   }
 

@@ -17,6 +17,8 @@ npx mori-lint --explain MORI004
 
 プリセットは generic（初期値）、coding、research、ops の4種です。必須欄とルールの重大度が文書の種類ごとに変わります。
 
+日本語と英語の報告文に対応しています。文書の言語は自動で判定され、検出メッセージもその言語で出ます（`--lang ja|en|auto` で指定もできます）。
+
 ## ルール（7本）
 
 | ID | 内容 |
@@ -33,7 +35,7 @@ npx mori-lint --explain MORI004
 
 ```bash
 npm install
-npm test            # フィクスチャ48件で検証します
+npm test            # フィクスチャ62件で検証します
 npm run build
 node dist/cli.js examples/inflated-report.md --preset ops   # 盛った報告の例
 node dist/cli.js examples/clean-report.md --preset ops      # 通る報告の例

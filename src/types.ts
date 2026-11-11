@@ -17,6 +17,7 @@ export interface SectionRequirement {
 
 export interface MoriConfig {
   preset?: string;
+  lang?: Lang | "auto";
   rules?: Record<string, RuleSetting>;
   requiredSections?: string[];
   dictionary?: {
@@ -24,9 +25,12 @@ export interface MoriConfig {
   };
 }
 
+export type Lang = "ja" | "en";
+
 export interface LintOptions {
   preset?: string;
   config?: MoriConfig;
+  lang?: Lang | "auto";
 }
 
 export interface RuleInfo {
@@ -93,5 +97,64 @@ export const RULE_INFO: Record<string, RuleInfo> = {
     title: "金額・影響のないリスク欄",
     description: "リスク・弱気シナリオの欄に、金額・割合・件数・時間などの数値が1つもありません（opsプリセットでのみ初期有効）。",
     fix: "起きた場合の影響を数値で書いてください。金額で書けない場合は、件数や時間で書いてください。",
+  },
+};
+
+export const RULE_INFO_EN: Record<string, RuleInfo> = {
+  MORI000: {
+    id: "MORI000",
+    name: "suppression-without-reason",
+    title: "Suppression without a reason",
+    description: "A mori-lint-disable suppression has no reason: written after it.",
+    fix: "Write the reason after reason:. If no reason can be stated, fix the text instead.",
+  },
+  MORI001: {
+    id: "MORI001",
+    name: "absolute-claim",
+    title: "Absolute claim",
+    description: "Detects absolute or overconfident wording such as \"completely\", \"guaranteed\" or \"no issues\".",
+    fix: "State the grounds for the claim, or add the limits (detection interval, scope, remaining open questions).",
+  },
+  MORI002: {
+    id: "MORI002",
+    name: "missing-required-section",
+    title: "Missing required section",
+    description: "A section required by the preset (for example Unverified items or Assumptions) does not exist as a heading.",
+    fix: "Add the missing section. Even when it is empty, keep the section and write \"None\" with a reason.",
+  },
+  MORI003: {
+    id: "MORI003",
+    name: "empty-none",
+    title: "\"None\" without grounds",
+    description: "A section body is only \"None\", \"Nothing\" or \"N/A\", with no reason or grounds.",
+    fix: "After \"None\", add how you checked or the grounds, for example in parentheses.",
+  },
+  MORI004: {
+    id: "MORI004",
+    name: "completion-without-evidence",
+    title: "Completion without evidence",
+    description: "A paragraph states completion, deployment or a fix, but has no evidence (URL, file path, commit hash, run output, image reference).",
+    fix: "Attach evidence of completion in the same paragraph, in a form a reader can verify later.",
+  },
+  MORI005: {
+    id: "MORI005",
+    name: "all-without-denominator",
+    title: "\"All\" without a denominator",
+    description: "An \"all / every\" claim has no denominator (n of N) in the surrounding sentences.",
+    fix: "Write the total and the verified count in the form \"1,240 of 1,240\".",
+  },
+  MORI006: {
+    id: "MORI006",
+    name: "number-without-basis",
+    title: "Number without a basis",
+    description: "A figure (amount, percentage, count) has no source or formula in the surrounding sentences (on by default only in the research preset).",
+    fix: "Add a source, a formula (unit price x count = total), or a reference to the data file.",
+  },
+  MORI007: {
+    id: "MORI007",
+    name: "risk-without-amount",
+    title: "Risk section without figures",
+    description: "A risk or downside section contains no figures at all (amount, percentage, count, time) (on by default only in the ops preset).",
+    fix: "State the impact in numbers. If money does not apply, use counts or time.",
   },
 };

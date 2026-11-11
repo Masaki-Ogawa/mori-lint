@@ -221,9 +221,10 @@ var MoriLint = (() => {
       if (excluded[li] || HEADING_RE.test(lines[li])) continue;
       const text = cleanLines[li];
       if (!text.trim()) continue;
-      const parts = text.split(/(?<=[。．.!?！？])/);
+      const guarded = text.replace(/(\d)\.(\d)/g, "$1\u2024$2");
+      const parts = guarded.split(/(?<=[。．.!?！？])/);
       for (const part of parts) {
-        const t = part.trim();
+        const t = part.replace(/\u2024/g, ".").trim();
         if (t) sentences.push({ text: t, line: li + 1 });
       }
     }
@@ -265,12 +266,25 @@ var MoriLint = (() => {
   var ABSOLUTE_TERMS_EN = [
     "perfectly",
     "completely",
+    "absolutely",
     "guaranteed",
     "guarantee",
     "no issues",
+    "no problem",
+    "problem-free",
     "all done",
     "flawless",
-    "flawlessly"
+    "flawlessly",
+    "always",
+    "definitely",
+    "certainly",
+    "undoubtedly",
+    "entirely",
+    "never fails",
+    "zero risk",
+    "risk-free",
+    "infallible",
+    "bulletproof"
   ];
   var UNVERIFIED = {
     name: "\u672A\u78BA\u8A8D\u4E8B\u9805",
@@ -367,8 +381,9 @@ var MoriLint = (() => {
   }
 
   // src/rules/mori001.ts
-  var NEGATION_RE = /ではありません|ではない|じゃありません|not\s+(complete|perfect|guaranteed)/i;
+  var NEGATION_RE = /ではありません|ではない|じゃありません|\bnot\b|n't\b/i;
   var checkMori001 = (doc, ctx) => {
+    const en = ctx.lang === "en";
     const findings = [];
     for (const sentence of doc.sentences) {
       const text = sentence.text;
@@ -397,7 +412,7 @@ var MoriLint = (() => {
             "absolute-claim",
             "warn",
             sentence.line,
-            `\u7D76\u5BFE\u8868\u73FE\u300C${hit}\u300D\u304C\u3042\u308A\u307E\u3059\u3002\u65AD\u5B9A\u306E\u6839\u62E0\u3092\u66F8\u304F\u304B\u3001\u7559\u4FDD\u3092\u4F75\u8A18\u3057\u3066\u304F\u3060\u3055\u3044\u3002`,
+            en ? `Absolute claim "${hit}". State the grounds for the claim, or add the limits (scope, detection interval, remaining open questions).` : `\u7D76\u5BFE\u8868\u73FE\u300C${hit}\u300D\u304C\u3042\u308A\u307E\u3059\u3002\u65AD\u5B9A\u306E\u6839\u62E0\u3092\u66F8\u304F\u304B\u3001\u7559\u4FDD\u3092\u4F75\u8A18\u3057\u3066\u304F\u3060\u3055\u3044\u3002`,
             text
           )
         );
@@ -412,13 +427,14 @@ var MoriLint = (() => {
     for (const req of ctx.preset.requiredSections) {
       const exists = doc.sections.some((s) => titleMatches(s.title, req.aliases));
       if (!exists) {
+        const enName = req.aliases.find((a) => /^[\x00-\x7F]+$/.test(a)) ?? req.name;
         findings.push(
           makeFinding(
             "MORI002",
             "missing-required-section",
             "error",
             1,
-            `\u5FC5\u9808\u6B04\u300C${req.name}\u300D\u304C\u898B\u51FA\u3057\u3068\u3057\u3066\u5B58\u5728\u3057\u307E\u305B\u3093\u3002\u6B04\u3092\u8FFD\u52A0\u3057\u3001\u4E2D\u8EAB\u304C\u306A\u3044\u5834\u5408\u3082\u7406\u7531\u3092\u66F8\u3044\u3066\u304F\u3060\u3055\u3044\u3002`
+            ctx.lang === "en" ? `Required section "${enName}" does not exist as a heading. Add the section, and give a reason even when it is empty.` : `\u5FC5\u9808\u6B04\u300C${req.name}\u300D\u304C\u898B\u51FA\u3057\u3068\u3057\u3066\u5B58\u5728\u3057\u307E\u305B\u3093\u3002\u6B04\u3092\u8FFD\u52A0\u3057\u3001\u4E2D\u8EAB\u304C\u306A\u3044\u5834\u5408\u3082\u7406\u7531\u3092\u66F8\u3044\u3066\u304F\u3060\u3055\u3044\u3002`
           )
         );
       }
@@ -429,14 +445,17 @@ var MoriLint = (() => {
   // src/rules/mori003.ts
   var NONE_EXACT_RE = /^(なし|特になし|とくになし|N\/A|none|nothing)$/i;
   var REASON_RE = /ため|ので|から|確認済み|確認した|理由/;
-  var checkMori003 = (doc) => {
+  var EN_NONE_START_RE = /^(none|nothing|n\/a)\b/i;
+  var EN_REASON_RE = /because|since|checked|verified|confirmed|reviewed/i;
+  var checkMori003 = (doc, ctx) => {
+    const en = ctx.lang === "en";
     const findings = [];
     for (const section of doc.sections) {
       const body = section.body.replace(/\s+/g, " ").trim();
       if (!body) continue;
       const stripped = body.replace(/[。.!！\s]/g, "");
       const isExactNone = NONE_EXACT_RE.test(stripped);
-      const isShortNone = body.length <= 12 && /^(なし|特になし|とくになし|N\/A)/i.test(body) && !REASON_RE.test(body);
+      const isShortNone = body.length <= 12 && /^(なし|特になし|とくになし|N\/A)/i.test(body) && !REASON_RE.test(body) || body.length <= 60 && EN_NONE_START_RE.test(body) && !EN_REASON_RE.test(body) && !REASON_RE.test(body);
       if (isExactNone || isShortNone) {
         findings.push(
           makeFinding(
@@ -444,7 +463,7 @@ var MoriLint = (() => {
             "empty-none",
             "warn",
             section.startLine,
-            `\u6B04\u300C${section.title}\u300D\u306E\u672C\u6587\u304C\u300C${body}\u300D\u3060\u3051\u3067\u3001\u7406\u7531\u3084\u6839\u62E0\u304C\u66F8\u304B\u308C\u3066\u3044\u307E\u305B\u3093\u3002\u78BA\u8A8D\u3057\u305F\u65B9\u6CD5\u3084\u6839\u62E0\u3092\u6DFB\u3048\u3066\u304F\u3060\u3055\u3044\u3002`,
+            en ? `Section "${section.title}" contains only "${body}", with no reason or grounds. Add how you checked, or the grounds.` : `\u6B04\u300C${section.title}\u300D\u306E\u672C\u6587\u304C\u300C${body}\u300D\u3060\u3051\u3067\u3001\u7406\u7531\u3084\u6839\u62E0\u304C\u66F8\u304B\u308C\u3066\u3044\u307E\u305B\u3093\u3002\u78BA\u8A8D\u3057\u305F\u65B9\u6CD5\u3084\u6839\u62E0\u3092\u6DFB\u3048\u3066\u304F\u3060\u3055\u3044\u3002`,
             body
           )
         );
@@ -461,7 +480,8 @@ var MoriLint = (() => {
     /(?:[\w.\-]+\/)+[\w.\-]+\.\w+/,
     /\b(?=[0-9a-f]*\d)(?=[0-9a-f]*[a-f])[0-9a-f]{7,40}\b/
   ];
-  var checkMori004 = (doc) => {
+  var checkMori004 = (doc, ctx) => {
+    const en = ctx.lang === "en";
     const findings = [];
     for (const para of doc.paragraphs) {
       if (!COMPLETION_RE.test(para.text)) continue;
@@ -475,7 +495,7 @@ ${para.blockRaw}`;
             "completion-without-evidence",
             "warn",
             para.startLine,
-            "\u5B8C\u4E86\u3092\u8FF0\u3079\u308B\u6BB5\u843D\u306B\u8A3C\u8DE1\uFF08URL\u3001\u30D5\u30A1\u30A4\u30EB\u30D1\u30B9\u3001\u30B3\u30DF\u30C3\u30C8\u30CF\u30C3\u30B7\u30E5\u3001\u5B9F\u884C\u7D50\u679C\u3001\u753B\u50CF\u53C2\u7167\uFF09\u304C\u3042\u308A\u307E\u305B\u3093\u3002",
+            en ? "This paragraph states completion but has no evidence (URL, file path, commit hash, run output, image reference)." : "\u5B8C\u4E86\u3092\u8FF0\u3079\u308B\u6BB5\u843D\u306B\u8A3C\u8DE1\uFF08URL\u3001\u30D5\u30A1\u30A4\u30EB\u30D1\u30B9\u3001\u30B3\u30DF\u30C3\u30C8\u30CF\u30C3\u30B7\u30E5\u3001\u5B9F\u884C\u7D50\u679C\u3001\u753B\u50CF\u53C2\u7167\uFF09\u304C\u3042\u308A\u307E\u305B\u3093\u3002",
             para.text.split("\n")[0]
           )
         );
@@ -487,7 +507,8 @@ ${para.blockRaw}`;
   // src/rules/mori005.ts
   var ALL_RE = /全件|すべて|全て|\ball\b|\bevery\b/i;
   var DENOMINATOR_RE = /(\d[\d,]*\s*件中\s*\d[\d,]*\s*件|\d[\d,]*\s*\/\s*\d[\d,]*|\d+\s+of\s+\d+)/i;
-  var checkMori005 = (doc) => {
+  var checkMori005 = (doc, ctx) => {
+    const en = ctx.lang === "en";
     const findings = [];
     const sents = doc.sentences;
     for (let idx = 0; idx < sents.length; idx++) {
@@ -500,7 +521,7 @@ ${para.blockRaw}`;
             "all-without-denominator",
             "warn",
             sents[idx].line,
-            "\u300C\u5168\u4EF6\u30FB\u3059\u3079\u3066\u300D\u306E\u4E3B\u5F35\u306B\u5206\u6BCD\uFF08\u4F55\u4EF6\u4E2D\u4F55\u4EF6\u304B\uFF09\u304C\u524D\u5F8C\u306E\u6587\u306B\u3042\u308A\u307E\u305B\u3093\u3002\u7DCF\u6570\u3068\u78BA\u8A8D\u6E08\u307F\u4EF6\u6570\u3092\u66F8\u3044\u3066\u304F\u3060\u3055\u3044\u3002",
+            en ? 'The "all / every" claim has no denominator (n of N) in the surrounding sentences. State the total and the verified count.' : "\u300C\u5168\u4EF6\u30FB\u3059\u3079\u3066\u300D\u306E\u4E3B\u5F35\u306B\u5206\u6BCD\uFF08\u4F55\u4EF6\u4E2D\u4F55\u4EF6\u304B\uFF09\u304C\u524D\u5F8C\u306E\u6587\u306B\u3042\u308A\u307E\u305B\u3093\u3002\u7DCF\u6570\u3068\u78BA\u8A8D\u6E08\u307F\u4EF6\u6570\u3092\u66F8\u3044\u3066\u304F\u3060\u3055\u3044\u3002",
             sents[idx].text
           )
         );
@@ -513,7 +534,8 @@ ${para.blockRaw}`;
   var NUMBER_RE = /(\d[\d,]*(?:\.\d+)?\s*(%|％|円|件|人|割|ドル|台|回)|\d+(?:\.\d+)?\s*percent)/i;
   var BASIS_RE = /(出典|https?:\/\/|×|＝|=|ファイル|sources?|references?)/i;
   var PATH_RE = /(?:[\w.\-]+\/)+[\w.\-]+\.\w+/;
-  var checkMori006 = (doc) => {
+  var checkMori006 = (doc, ctx) => {
+    const en = ctx.lang === "en";
     const findings = [];
     const sents = doc.sentences;
     for (let idx = 0; idx < sents.length; idx++) {
@@ -526,7 +548,7 @@ ${para.blockRaw}`;
             "number-without-basis",
             "warn",
             sents[idx].line,
-            "\u6570\u5B57\u306B\u51FA\u5178\u3084\u8A08\u7B97\u5F0F\u304C\u524D\u5F8C\u306E\u6587\u306B\u3042\u308A\u307E\u305B\u3093\u3002\u51FA\u5178\u3001\u8A08\u7B97\u306E\u5165\u529B\u3001\u307E\u305F\u306F\u96C6\u8A08\u30D5\u30A1\u30A4\u30EB\u3078\u306E\u53C2\u7167\u3092\u6DFB\u3048\u3066\u304F\u3060\u3055\u3044\u3002",
+            en ? "A number appears without a source or formula in the surrounding sentences. Add a source, the calculation inputs, or a reference to the data file." : "\u6570\u5B57\u306B\u51FA\u5178\u3084\u8A08\u7B97\u5F0F\u304C\u524D\u5F8C\u306E\u6587\u306B\u3042\u308A\u307E\u305B\u3093\u3002\u51FA\u5178\u3001\u8A08\u7B97\u306E\u5165\u529B\u3001\u307E\u305F\u306F\u96C6\u8A08\u30D5\u30A1\u30A4\u30EB\u3078\u306E\u53C2\u7167\u3092\u6DFB\u3048\u3066\u304F\u3060\u3055\u3044\u3002",
             sents[idx].text
           )
         );
@@ -537,7 +559,8 @@ ${para.blockRaw}`;
 
   // src/rules/mori007.ts
   var NUMBER_RE2 = /[0-9０-９]/;
-  var checkMori007 = (doc) => {
+  var checkMori007 = (doc, ctx) => {
+    const en = ctx.lang === "en";
     const findings = [];
     for (const section of doc.sections) {
       if (!titleMatches(section.title, RISK_SECTION_ALIASES)) continue;
@@ -548,7 +571,7 @@ ${para.blockRaw}`;
             "risk-without-amount",
             "warn",
             section.startLine,
-            `\u6B04\u300C${section.title}\u300D\u306B\u91D1\u984D\u30FB\u5272\u5408\u30FB\u4EF6\u6570\u30FB\u6642\u9593\u306A\u3069\u306E\u6570\u5024\u304C\u3042\u308A\u307E\u305B\u3093\u3002\u8D77\u304D\u305F\u5834\u5408\u306E\u5F71\u97FF\u3092\u6570\u5024\u3067\u66F8\u3044\u3066\u304F\u3060\u3055\u3044\u3002`,
+            en ? `Section "${section.title}" contains no figures (amount, percentage, count, time). State the impact in numbers.` : `\u6B04\u300C${section.title}\u300D\u306B\u91D1\u984D\u30FB\u5272\u5408\u30FB\u4EF6\u6570\u30FB\u6642\u9593\u306A\u3069\u306E\u6570\u5024\u304C\u3042\u308A\u307E\u305B\u3093\u3002\u8D77\u304D\u305F\u5834\u5408\u306E\u5F71\u97FF\u3092\u6570\u5024\u3067\u66F8\u3044\u3066\u304F\u3060\u3055\u3044\u3002`,
             section.body.split("\n")[0]
           )
         );
@@ -567,10 +590,17 @@ ${para.blockRaw}`;
     MORI006: checkMori006,
     MORI007: checkMori007
   };
+  function detectLang(text) {
+    const jaChars = (text.match(/[\u3040-\u30ff\u4e00-\u9fff]/g) ?? []).length;
+    const enChars = (text.match(/[A-Za-z]/g) ?? []).length;
+    return enChars > 0 && enChars >= jaChars * 2 ? "en" : "ja";
+  }
   function lint(text, options = {}) {
     const config = options.config ?? {};
     const presetName = options.preset ?? config.preset ?? "generic";
     const preset = resolvePreset(presetName, config);
+    const requested = options.lang ?? config.lang ?? "auto";
+    const lang = requested === "auto" ? detectLang(text) : requested;
     const doc = parseMarkdown(text);
     const ctx = {
       preset,
@@ -578,7 +608,8 @@ ${para.blockRaw}`;
         ...ABSOLUTE_TERMS_JA,
         ...config.dictionary?.absoluteTerms ?? []
       ],
-      absoluteTermsEn: [...ABSOLUTE_TERMS_EN]
+      absoluteTermsEn: [...ABSOLUTE_TERMS_EN],
+      lang
     };
     let findings = [];
     for (const sup of doc.suppressions) {
@@ -588,7 +619,7 @@ ${para.blockRaw}`;
           ruleName: RULE_INFO.MORI000.name,
           severity: "warn",
           line: sup.line,
-          message: "\u6291\u5236\u6307\u5B9A\uFF08mori-lint-disable\uFF09\u306B\u7406\u7531\uFF08reason:\uFF09\u304C\u66F8\u304B\u308C\u3066\u3044\u307E\u305B\u3093\u3002\u7406\u7531\u3092\u66F8\u304F\u304B\u3001\u672C\u6587\u3092\u76F4\u3057\u3066\u304F\u3060\u3055\u3044\u3002"
+          message: lang === "en" ? "A suppression (mori-lint-disable) has no reason (reason:). Write the reason, or fix the text instead." : "\u6291\u5236\u6307\u5B9A\uFF08mori-lint-disable\uFF09\u306B\u7406\u7531\uFF08reason:\uFF09\u304C\u66F8\u304B\u308C\u3066\u3044\u307E\u305B\u3093\u3002\u7406\u7531\u3092\u66F8\u304F\u304B\u3001\u672C\u6587\u3092\u76F4\u3057\u3066\u304F\u3060\u3055\u3044\u3002"
         });
       }
     }

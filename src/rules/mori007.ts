@@ -5,7 +5,8 @@ import { RuleCheck, makeFinding } from "./context";
 const NUMBER_RE = /[0-9０-９]/;
 
 // MORI007: a risk / downside section with no numbers at all (on by default only in the ops preset)
-export const checkMori007: RuleCheck = (doc) => {
+export const checkMori007: RuleCheck = (doc, ctx) => {
+  const en = ctx.lang === "en";
   const findings = [];
   for (const section of doc.sections) {
     if (!titleMatches(section.title, RISK_SECTION_ALIASES)) continue;
@@ -16,7 +17,9 @@ export const checkMori007: RuleCheck = (doc) => {
           "risk-without-amount",
           "warn",
           section.startLine,
-          `欄「${section.title}」に金額・割合・件数・時間などの数値がありません。起きた場合の影響を数値で書いてください。`,
+          en
+            ? `Section "${section.title}" contains no figures (amount, percentage, count, time). State the impact in numbers.`
+            : `欄「${section.title}」に金額・割合・件数・時間などの数値がありません。起きた場合の影響を数値で書いてください。`,
           section.body.split("\n")[0]
         )
       );

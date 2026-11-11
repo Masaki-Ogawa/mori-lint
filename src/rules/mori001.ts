@@ -1,9 +1,10 @@
 import { RuleCheck, makeFinding } from "./context";
 
-const NEGATION_RE = /ではありません|ではない|じゃありません|not\s+(complete|perfect|guaranteed)/i;
+const NEGATION_RE = /ではありません|ではない|じゃありません|\bnot\b|n't\b/i;
 
 // MORI001: absolute / overconfident claims (negated sentences are excluded)
 export const checkMori001: RuleCheck = (doc, ctx) => {
+  const en = ctx.lang === "en";
   const findings = [];
   for (const sentence of doc.sentences) {
     const text = sentence.text;
@@ -32,7 +33,9 @@ export const checkMori001: RuleCheck = (doc, ctx) => {
           "absolute-claim",
           "warn",
           sentence.line,
-          `絶対表現「${hit}」があります。断定の根拠を書くか、留保を併記してください。`,
+          en
+            ? `Absolute claim "${hit}". State the grounds for the claim, or add the limits (scope, detection interval, remaining open questions).`
+            : `絶対表現「${hit}」があります。断定の根拠を書くか、留保を併記してください。`,
           text
         )
       );

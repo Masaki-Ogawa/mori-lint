@@ -198,9 +198,11 @@ export function parseMarkdown(raw: string): ParsedDoc {
     if (excluded[li] || HEADING_RE.test(lines[li])) continue;
     const text = cleanLines[li];
     if (!text.trim()) continue;
-    const parts = text.split(/(?<=[。．.!?！？])/);
+    // Protect decimal points (e.g. 3.5) so they are not treated as sentence ends
+    const guarded = text.replace(/(\d)\.(\d)/g, "$1\u2024$2");
+    const parts = guarded.split(/(?<=[。．.!?！？])/);
     for (const part of parts) {
-      const t = part.trim();
+      const t = part.replace(/\u2024/g, ".").trim();
       if (t) sentences.push({ text: t, line: li + 1 });
     }
   }

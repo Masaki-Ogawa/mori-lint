@@ -11,7 +11,8 @@ const EVIDENCE_RES: RegExp[] = [
 ];
 
 // MORI004: a completion claim whose paragraph (and attached block) has no evidence
-export const checkMori004: RuleCheck = (doc) => {
+export const checkMori004: RuleCheck = (doc, ctx) => {
+  const en = ctx.lang === "en";
   const findings = [];
   for (const para of doc.paragraphs) {
     if (!COMPLETION_RE.test(para.text)) continue;
@@ -27,7 +28,9 @@ export const checkMori004: RuleCheck = (doc) => {
           "completion-without-evidence",
           "warn",
           para.startLine,
-          "完了を述べる段落に証跡（URL、ファイルパス、コミットハッシュ、実行結果、画像参照）がありません。",
+          en
+            ? "This paragraph states completion but has no evidence (URL, file path, commit hash, run output, image reference)."
+            : "完了を述べる段落に証跡（URL、ファイルパス、コミットハッシュ、実行結果、画像参照）がありません。",
           para.text.split("\n")[0]
         )
       );

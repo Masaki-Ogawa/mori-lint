@@ -7,7 +7,8 @@ const BASIS_RE =
 const PATH_RE = /(?:[\w.\-]+\/)+[\w.\-]+\.\w+/;
 
 // MORI006: a number with no source, formula or reference (on by default only in the research preset)
-export const checkMori006: RuleCheck = (doc) => {
+export const checkMori006: RuleCheck = (doc, ctx) => {
+  const en = ctx.lang === "en";
   const findings = [];
   const sents = doc.sentences;
   for (let idx = 0; idx < sents.length; idx++) {
@@ -20,7 +21,9 @@ export const checkMori006: RuleCheck = (doc) => {
           "number-without-basis",
           "warn",
           sents[idx].line,
-          "数字に出典や計算式が前後の文にありません。出典、計算の入力、または集計ファイルへの参照を添えてください。",
+          en
+            ? "A number appears without a source or formula in the surrounding sentences. Add a source, the calculation inputs, or a reference to the data file."
+            : "数字に出典や計算式が前後の文にありません。出典、計算の入力、または集計ファイルへの参照を添えてください。",
           sents[idx].text
         )
       );

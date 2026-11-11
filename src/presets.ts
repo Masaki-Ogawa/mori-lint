@@ -24,12 +24,25 @@ export const ABSOLUTE_TERMS_JA = [
 export const ABSOLUTE_TERMS_EN = [
   "perfectly",
   "completely",
+  "absolutely",
   "guaranteed",
   "guarantee",
   "no issues",
+  "no problem",
+  "problem-free",
   "all done",
   "flawless",
   "flawlessly",
+  "always",
+  "definitely",
+  "certainly",
+  "undoubtedly",
+  "entirely",
+  "never fails",
+  "zero risk",
+  "risk-free",
+  "infallible",
+  "bulletproof",
 ];
 
 const UNVERIFIED: SectionRequirement = {
