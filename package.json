@@ -11,7 +11,8 @@
   "files": [
     "dist",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "CHANGELOG.md"
   ],
   "keywords": [
     "lint",
@@ -32,7 +33,7 @@
   },
   "type": "commonjs",
   "types": "dist/index.d.ts",
-  "version": "0.2.1",
+  "version": "1.0.0",
   "author": "Masaki Ogawa",
   "repository": {
     "type": "git",

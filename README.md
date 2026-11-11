@@ -4,6 +4,10 @@ A deterministic linter for AI agent reports — AIエージェントの報告文
 
 [English](#english) | [日本語](#日本語)
 
+[![npm version](https://img.shields.io/npm/v/mori-lint.svg)](https://www.npmjs.com/package/mori-lint) [![license](https://img.shields.io/npm/l/mori-lint.svg)](LICENSE)
+
+**Live demo:** https://masaki-ogawa.github.io/mori-lint/ · **npm:** https://www.npmjs.com/package/mori-lint
+
 ---
 
 ## English
@@ -24,6 +28,23 @@ npx mori-lint --explain MORI004
 Four presets are available: generic (default), coding, research, and ops. Required sections and rule severities change per preset.
 
 Reports in English and Japanese are both supported. The document language is detected automatically and findings are reported in that language (override with `--lang ja|en|auto`).
+
+### Example output
+
+```text
+$ npx mori-lint report.md --preset ops
+== report.md
+  line 1 [error] MORI002 missing-required-section: Required section "Downside scenario" does not exist as a heading. Add the section, and give a reason even when it is empty.
+  line 1 [error] MORI002 missing-required-section: Required section "Assumptions" does not exist as a heading. Add the section, and give a reason even when it is empty.
+  line 3 [warn] MORI001 absolute-claim: Absolute claim "completely". State the grounds for the claim, or add the limits (scope, detection interval, remaining open questions).
+    > The system is completely flawless and guaranteed to have no issues.
+  line 3 [warn] MORI005 all-without-denominator: The "all / every" claim has no denominator (n of N) in the surrounding sentences. State the total and the verified count.
+    > All alerts were handled.
+  line 5 [warn] MORI003 empty-none: Section "Unverified items" contains only "None", with no reason or grounds. Add how you checked, or the grounds.
+    > None
+
+Total: 2 error(s) / 3 warning(s) across 1 file(s)
+```
 
 ### Rules
 
@@ -85,6 +106,28 @@ npx mori-lint --explain MORI004
 プリセットは generic（初期値）、coding、research、ops の4種です。必須欄とルールの重大度が文書の種類ごとに変わります。
 
 日本語と英語の報告文に対応しています。文書の言語は自動で判定され、検出メッセージもその言語で出ます（`--lang ja|en|auto` で指定もできます）。
+
+### 出力例
+
+```text
+$ npx mori-lint examples/inflated-report.md --preset ops
+== examples/inflated-report.md
+  1行目 [error] MORI002 missing-required-section: 必須欄「弱気シナリオ・リスク試算」が見出しとして存在しません。欄を追加し、中身がない場合も理由を書いてください。
+  3行目 [warn] MORI001 absolute-claim: 絶対表現「完全に」があります。断定の根拠を書くか、留保を併記してください。
+    > 監視の仕組みが障害パターンを完全にカバーしており、盤石な体制です。
+  3行目 [warn] MORI001 absolute-claim: 絶対表現「問題ありません」があります。断定の根拠を書くか、留保を併記してください。
+    > 問題ありません。
+  3行目 [warn] MORI004 completion-without-evidence: 完了を述べる段落に証跡（URL、ファイルパス、コミットハッシュ、実行結果、画像参照）がありません。
+    > 本日の監視は全件完了しました。監視の仕組みが障害パターンを完全にカバーしており、盤石な体制です。問題ありません。
+  3行目 [warn] MORI005 all-without-denominator: 「全件・すべて」の主張に分母（何件中何件か）が前後の文にありません。総数と確認済み件数を書いてください。
+    > 本日の監視は全件完了しました。
+  5行目 [warn] MORI003 empty-none: 欄「未確認事項」の本文が「なし」だけで、理由や根拠が書かれていません。確認した方法や根拠を添えてください。
+    > なし
+  8行目 [warn] MORI003 empty-none: 欄「前提」の本文が「特になし。」だけで、理由や根拠が書かれていません。確認した方法や根拠を添えてください。
+    > 特になし。
+
+合計: error 1件 / warn 6件（対象 1ファイル）
+```
 
 ### ルール（7本）
 
