@@ -12,6 +12,9 @@ permissions:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -36,40 +39,15 @@ jobs:
       - name: Publish to npm (OIDC trusted publishing, no token)
         if: steps.gate.outputs.skip != 'true'
         run: npm publish --provenance --access public
-
-  publish-gpr:
-    needs: publish
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-      id-token: write
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          registry-url: https://npm.pkg.github.com
-          scope: "@masaki-ogawa"
-      - name: Rename to scoped name (GitHub Packages requires a scope)
-        run: npm pkg set name=@masaki-ogawa/mori-lint
-      - run: npm install
-      - run: npm test
-      - name: Check whether this version is already on GitHub Packages
-        id: gate
+      - name: Create GitHub Release (notes from CHANGELOG.md)
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
         run: |
-          LOCAL=$(node -p "require('./package.json').version")
-          PUBLISHED=$(npm view @masaki-ogawa/mori-lint version 2>/dev/null || echo "none")
-          echo "local=$LOCAL published=$PUBLISHED"
-          if [ "$LOCAL" = "$PUBLISHED" ]; then
-            echo "skip=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "skip=false" >> "$GITHUB_OUTPUT"
+          V=$(node -p "require('./package.json').version")
+          TAG="v$V"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists"
+            exit 0
           fi
-      - name: Publish to GitHub Packages
-        if: steps.gate.outputs.skip != 'true'
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npm publish --provenance
+          awk -v v="$V" '/^## /{f=index($0,"## " v " ")==1; next} f' CHANGELOG.md > notes.md
+          gh release create "$TAG" --title "$TAG" --notes-file notes.md --target "$GITHUB_SHA" --latest
