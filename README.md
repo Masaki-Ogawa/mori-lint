@@ -49,10 +49,12 @@ node dist/cli.js examples/clean-report.md --preset ops      # a report that pass
 
 ### Web demo
 
-The `playground/` directory contains a static page. Paste a report into the browser and it is checked locally; the text is never sent anywhere.
+Try it online: https://masaki-ogawa.github.io/mori-lint/
+
+The `docs/` directory contains a static page (the same files GitHub Pages serves). Paste a report into the browser and it is checked locally; the text is never sent anywhere.
 
 ```bash
-npm run build:playground   # generates playground/mori-lint.browser.js
+npm run build:playground   # generates docs/mori-lint.browser.js
 ```
 
 ### Agent skill
@@ -108,10 +110,12 @@ node dist/cli.js examples/clean-report.md --preset ops      # 通る報告の例
 
 ### Webデモ
 
-`playground/` に静的ページがあります。ブラウザに報告文を貼るだけで試せて、入力した文章は外部に送信されません（検査エンジンをブラウザ内で実行します）。
+オンラインで試せます: https://masaki-ogawa.github.io/mori-lint/
+
+`docs/` に静的ページがあります（GitHub Pages で公開しているのと同じファイルです）。ブラウザに報告文を貼るだけで試せて、入力した文章は外部に送信されません（検査エンジンをブラウザ内で実行します）。
 
 ```bash
-npm run build:playground   # playground/mori-lint.browser.js を生成します
+npm run build:playground   # docs/mori-lint.browser.js を生成します
 ```
 
 ### Skill形式

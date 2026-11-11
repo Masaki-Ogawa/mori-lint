@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>mori-lint デモ ― AIエージェントの報告文を検査する</title>
+<style>
+  :root { --ink:#22241f; --paper:#faf8f2; --accent:#2e6b34; --err:#b3352b; --warn:#9a6a00; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family:"Hiragino Kaku Gothic ProN","Yu Gothic UI",sans-serif; background:var(--paper); color:var(--ink); }
+  header { padding:20px 20px 8px; max-width:1100px; margin:0 auto; }
+  h1 { font-size:22px; margin:0 0 6px; }
+  header p { margin:0 0 4px; font-size:14px; line-height:1.7; }
+  .privacy { color:var(--accent); font-weight:600; }
+  main { max-width:1100px; margin:0 auto; padding:12px 20px 32px; display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  @media (max-width:820px){ main{ grid-template-columns:1fr; } }
+  .panel { background:#fff; border:1px solid #ddd6c4; border-radius:8px; padding:14px; }
+  .panel h2 { font-size:14px; margin:0 0 10px; }
+  label { font-size:13px; display:block; margin-bottom:6px; }
+  select, textarea, button { font:inherit; }
+  select { padding:6px 8px; border:1px solid #c9c2ae; border-radius:6px; background:#fff; }
+  .row { display:flex; gap:10px; flex-wrap:wrap; align-items:end; margin-bottom:10px; }
+  textarea { width:100%; min-height:340px; padding:10px; border:1px solid #c9c2ae; border-radius:6px; line-height:1.7; font-family:ui-monospace,Menlo,monospace; font-size:13px; }
+  .summary { font-size:14px; font-weight:600; margin-bottom:10px; }
+  .summary .e { color:var(--err); } .summary .w { color:var(--warn); }
+  ul.findings { list-style:none; margin:0 0 14px; padding:0; }
+  ul.findings li { border-left:4px solid #ccc; padding:6px 10px; margin-bottom:8px; font-size:13px; line-height:1.6; background:#fbfaf6; }
+  ul.findings li.error { border-color:var(--err); }
+  ul.findings li.warn { border-color:#d9a400; }
+  ul.findings .meta { font-weight:600; }
+  .lines { font-family:ui-monospace,Menlo,monospace; font-size:12.5px; line-height:1.8; white-space:pre-wrap; word-break:break-all; border:1px solid #e3ddcb; border-radius:6px; overflow:hidden; }
+  .lines div { padding:0 8px; display:flex; gap:10px; }
+  .lines .no { color:#a39a7d; min-width:2.2em; text-align:right; user-select:none; }
+  .lines div.error { background:#fbeae8; }
+  .lines div.warn { background:#fdf3d3; }
+  .ok { color:var(--accent); font-weight:600; }
+  footer { max-width:1100px; margin:0 auto; padding:0 20px 24px; font-size:12.5px; color:#6d675a; line-height:1.7; }
+</style>
+</head>
+<body>
+<header>
+  <h1>mori-lint デモ</h1>
+  <p>AIエージェントの報告文を貼ると、絶対表現、必須欄の欠落、証跡のない完了宣言などを検査します。このツールは事実かどうかを判定しません。判定するのは「根拠が本文に書かれているか」までです。</p>
+  <p class="privacy">入力した文章は外部に送信されません。検査はすべてこのブラウザの中で実行されます。</p>
+</header>
+<main>
+  <section class="panel">
+    <h2>報告文（Markdown）</h2>
+    <div class="row">
+      <div>
+        <label for="sample">サンプル</label>
+        <select id="sample">
+          <option value="inflated">盛った運用報告</option>
+          <option value="research">根拠のない数字の調査報告</option>
+          <option value="clean">正しく書けた運用報告</option>
+        </select>
+      </div>
+      <div>
+        <label for="preset">プリセット</label>
+        <select id="preset">
+          <option value="ops">ops（運用報告）</option>
+          <option value="generic">generic</option>
+          <option value="coding">coding</option>
+          <option value="research">research</option>
+        </select>
+      </div>
+    </div>
+    <textarea id="input" spellcheck="false"></textarea>
+  </section>
+  <section class="panel">
+    <h2>検査結果</h2>
+    <div class="summary" id="summary"></div>
+    <ul class="findings" id="findings"></ul>
+    <div class="lines" id="lines"></div>
+  </section>
+</main>
+<footer>
+  ルールは7本です。MORI001 絶対表現 / MORI002 必須欄の欠落 / MORI003 根拠のない「なし」 / MORI004 証跡のない完了宣言 / MORI005 分母のない全件主張 / MORI006 根拠表示のない数字（research） / MORI007 金額・影響のないリスク欄（ops）。
+</footer>
+<script src="mori-lint.browser.js"></script>
+<script>
+"use strict";
+var SAMPLES = {
+  inflated: [
+    "# 夜間監視の実施報告",
+    "",
+    "本日の監視は全件完了しました。監視の仕組みが障害パターンを完全にカバーしており、盤石な体制です。問題ありません。",
+    "",
+    "## 未確認事項",
+    "なし",
+    "",
+    "## 前提",
+    "特になし。"
+  ].join("\n"),
+  research: [
+    "# 調査報告",
+    "",
+    "## 結論",
+    "導入後の問い合わせは35%減りました。利用者の8割が満足しており、月額コストは12,000円削減できます。",
+    "",
+    "## 未確認事項",
+    "他社の料金は未確認です。公式ページに載っておらず、比較の材料がそろっていないためです。"
+  ].join("\n"),
+  clean: [
+    "# 週次運用報告",
+    "",
+    "## 結果",
+    "集計は終わりました（対象120件中120件、結果ファイル reports/weekly.csv）。",
+    "",
+    "## 弱気シナリオ・リスク試算",
+    "対象が2割増えた場合、処理は最大40分延び、費用は月3,000円増えます。",
+    "",
+    "## 未確認事項",
+    "なし（対象画面は実機で確認済みのため）",
+    "",
+    "## 前提",
+    "集計は日本時間の日次で締めています。"
+  ].join("\n")
+};
+var SAMPLE_PRESET = { inflated: "ops", research: "research", clean: "ops" };
+
+var input = document.getElementById("input");
+var presetSel = document.getElementById("preset");
+var sampleSel = document.getElementById("sample");
+var summaryEl = document.getElementById("summary");
+var findingsEl = document.getElementById("findings");
+var linesEl = document.getElementById("lines");
+
+function esc(s) {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function run() {
+  var text = input.value;
+  var preset = presetSel.value;
+  var findings = MoriLint.lint(text, { preset: preset });
+  var errors = findings.filter(function (f) { return f.severity === "error"; }).length;
+  var warns = findings.length - errors;
+  summaryEl.innerHTML = findings.length === 0
+    ? '<span class="ok">検出なし。この報告はそのまま出せます。</span>'
+    : 'error <span class="e">' + errors + '</span>件 / warn <span class="w">' + warns + '</span>件';
+
+  findingsEl.innerHTML = findings.map(function (f) {
+    return '<li class="' + f.severity + '"><span class="meta">' + f.line + '行目 [' + f.severity + '] ' +
+      esc(f.ruleId) + ' ' + esc(f.ruleName) + '</span><br>' + esc(f.message) +
+      (f.excerpt ? '<br>&gt; ' + esc(f.excerpt) : '') + '</li>';
+  }).join("");
+
+  var worstByLine = {};
+  findings.forEach(function (f) {
+    if (f.severity === "error" || !worstByLine[f.line]) worstByLine[f.line] = f.severity;
+  });
+  linesEl.innerHTML = text.split("\n").map(function (line, i) {
+    var cls = worstByLine[i + 1] || "";
+    return '<div class="' + cls + '"><span class="no">' + (i + 1) + '</span><span>' + (esc(line) || " ") + '</span></div>';
+  }).join("");
+}
+
+sampleSel.addEventListener("change", function () {
+  input.value = SAMPLES[sampleSel.value];
+  presetSel.value = SAMPLE_PRESET[sampleSel.value];
+  run();
+});
+presetSel.addEventListener("change", run);
+input.addEventListener("input", run);
+
+input.value = SAMPLES.inflated;
+presetSel.value = "ops";
+run();
+</script>
+</body>
+</html>
