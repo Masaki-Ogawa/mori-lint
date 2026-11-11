@@ -2,7 +2,7 @@
   "bin": {
     "mori-lint": "dist/cli.js"
   },
-  "description": "AIエージェントの報告文を検査するリンター。絶対表現、必須欄の欠落、証跡のない完了宣言などを決定的ルールで検出する。",
+  "description": "A deterministic linter for AI agent reports (no LLM calls). AIエージェントの報告文を検査するリンター。",
   "devDependencies": {
     "@types/node": "^26.6.6",
     "esbuild": "^0.28.2",
@@ -11,7 +11,6 @@
   "files": [
     "dist",
     "README.md",
-    "README.en.md",
     "LICENSE"
   ],
   "keywords": [
@@ -33,7 +32,7 @@
   },
   "type": "commonjs",
   "types": "dist/index.d.ts",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "author": "Masaki Ogawa",
   "repository": {
     "type": "git",
